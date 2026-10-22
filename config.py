@@ -1,0 +1,5 @@
+MYSQL_HOST = "localhost"
+MYSQL_USER = "root"
+MYSQL_PASSWORD = "root"
+MYSQL_DB = "smart_campus_ai"
+SECRET_KEY = "smart-campus-secret-key"

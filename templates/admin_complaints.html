@@ -1,0 +1,854 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Complaint #{{ complaint.id }} - Admin
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f5f5;
+            color: #111;
+        }
+
+        /* ==============================
+           TOP BAR
+        ============================== */
+
+        .topbar {
+
+            height: 70px;
+
+            background: #111;
+
+            color: white;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding: 0 40px;
+        }
+
+        .logo {
+
+            font-size: 24px;
+
+            font-weight: 800;
+        }
+
+        .logo span {
+
+            color: #ffd21f;
+        }
+
+        .back {
+
+            color: white;
+
+            text-decoration: none;
+
+            font-weight: bold;
+        }
+
+        /* ==============================
+           CONTAINER
+        ============================== */
+
+        .container {
+
+            width: 92%;
+
+            max-width: 1200px;
+
+            margin: 35px auto;
+        }
+
+        /* ==============================
+           HEADER
+        ============================== */
+
+        .page-header {
+
+            background: #ffd21f;
+
+            padding: 30px;
+
+            border-radius: 15px;
+
+            margin-bottom: 25px;
+        }
+
+        .page-header h1 {
+
+            font-size: 30px;
+
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+
+            color: #333;
+        }
+
+        /* ==============================
+           GRID
+        ============================== */
+
+        .grid {
+
+            display: grid;
+
+            grid-template-columns: 2fr 1fr;
+
+            gap: 25px;
+        }
+
+        .card {
+
+            background: white;
+
+            border-radius: 15px;
+
+            padding: 25px;
+
+            margin-bottom: 25px;
+
+            border: 1px solid #ddd;
+        }
+
+        .card h2 {
+
+            margin-bottom: 20px;
+
+            font-size: 21px;
+        }
+
+        /* ==============================
+           COMPLAINT INFORMATION
+        ============================== */
+
+        .info-row {
+
+            margin-bottom: 18px;
+        }
+
+        .label {
+
+            font-size: 12px;
+
+            font-weight: bold;
+
+            color: #777;
+
+            text-transform: uppercase;
+
+            margin-bottom: 5px;
+        }
+
+        .value {
+
+            font-size: 16px;
+
+            line-height: 1.5;
+        }
+
+        .description {
+
+            background: #f5f5f5;
+
+            padding: 18px;
+
+            border-radius: 10px;
+
+            line-height: 1.6;
+        }
+
+        /* ==============================
+           AI ANALYSIS
+        ============================== */
+
+        .ai-grid {
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 12px;
+        }
+
+        .ai-box {
+
+            border: 1px solid #ddd;
+
+            padding: 15px;
+
+            border-radius: 10px;
+
+            background: #fafafa;
+        }
+
+        .ai-box strong {
+
+            display: block;
+
+            margin-bottom: 5px;
+        }
+
+        .priority {
+
+            background: #ffd21f;
+
+            padding: 5px 10px;
+
+            border-radius: 15px;
+
+            font-weight: bold;
+
+            display: inline-block;
+        }
+
+        /* ==============================
+           AI EXPLANATION
+        ============================== */
+
+        .explanation {
+
+            background: #fff8d6;
+
+            border-left: 5px solid #ffd21f;
+
+            padding: 18px;
+
+            line-height: 1.6;
+
+            border-radius: 8px;
+        }
+
+        /* ==============================
+           RECOMMENDATION
+        ============================== */
+
+        .recommendation {
+
+            background: #111;
+
+            color: white;
+
+            padding: 20px;
+
+            border-radius: 10px;
+
+            line-height: 1.6;
+        }
+
+        /* ==============================
+           STATUS FORM
+        ============================== */
+
+        select,
+        textarea {
+
+            width: 100%;
+
+            padding: 12px;
+
+            border: 1px solid #ccc;
+
+            border-radius: 8px;
+
+            margin-top: 8px;
+
+            font-size: 15px;
+        }
+
+        textarea {
+
+            height: 110px;
+
+            resize: vertical;
+        }
+
+        .btn {
+
+            width: 100%;
+
+            margin-top: 15px;
+
+            padding: 13px;
+
+            background: #ffd21f;
+
+            color: #111;
+
+            border: none;
+
+            border-radius: 8px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+        }
+
+        .btn:hover {
+
+            background: #e5bb00;
+        }
+
+        /* ==============================
+           HISTORY
+        ============================== */
+
+        .history-item {
+
+            border-left: 3px solid #ffd21f;
+
+            padding: 12px 15px;
+
+            margin-bottom: 15px;
+
+            background: #fafafa;
+
+            border-radius: 5px;
+        }
+
+        .history-item strong {
+
+            display: block;
+
+            margin-bottom: 5px;
+        }
+
+        .history-item small {
+
+            color: #777;
+        }
+
+        /* ==============================
+           FLASH
+        ============================== */
+
+        .flash {
+
+            background: #fff8d6;
+
+            border: 1px solid #ffd21f;
+
+            padding: 12px 15px;
+
+            border-radius: 8px;
+
+            margin-bottom: 20px;
+        }
+
+        /* ==============================
+           RESPONSIVE
+        ============================== */
+
+        @media (max-width: 850px) {
+
+            .grid {
+
+                grid-template-columns: 1fr;
+            }
+
+            .ai-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+
+                padding: 0 20px;
+            }
+
+            .container {
+
+                width: 94%;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================
+     TOP BAR
+===================================== -->
+
+<div class="topbar">
+
+    <div class="logo">
+        SMART <span>CAMPUS</span>
+    </div>
+
+    <a
+        href="{{ url_for('admin_dashboard') }}"
+        class="back"
+    >
+        ← Back to Dashboard
+    </a>
+
+</div>
+
+
+<div class="container">
+
+
+    <!-- =====================================
+         FLASH MESSAGES
+    ===================================== -->
+
+    {% with messages = get_flashed_messages() %}
+
+        {% if messages %}
+
+            {% for message in messages %}
+
+                <div class="flash">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =====================================
+         PAGE HEADER
+    ===================================== -->
+
+    <div class="page-header">
+
+        <h1>
+            Complaint #{{ complaint.id }}
+        </h1>
+
+        <p>
+            Complete complaint analysis and management
+        </p>
+
+    </div>
+
+
+    <div class="grid">
+
+
+        <!-- =====================================
+             LEFT SIDE
+        ===================================== -->
+
+        <div>
+
+
+            <!-- COMPLAINT INFORMATION -->
+
+            <div class="card">
+
+                <h2>
+                    Complaint Information
+                </h2>
+
+                <div class="info-row">
+
+                    <div class="label">
+                        Title
+                    </div>
+
+                    <div class="value">
+                        {{ complaint.title }}
+                    </div>
+
+                </div>
+
+
+                <div class="info-row">
+
+                    <div class="label">
+                        Description
+                    </div>
+
+                    <div class="description">
+                        {{ complaint.description }}
+                    </div>
+
+                </div>
+
+
+                <div class="info-row">
+
+                    <div class="label">
+                        Location
+                    </div>
+
+                    <div class="value">
+                        {{ complaint.location }}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- USER INFORMATION -->
+
+            <div class="card">
+
+                <h2>
+                    Submitted By
+                </h2>
+
+                <div class="info-row">
+
+                    <div class="label">
+                        Name
+                    </div>
+
+                    <div class="value">
+                        {{ complaint.user_name }}
+                    </div>
+
+                </div>
+
+                <div class="info-row">
+
+                    <div class="label">
+                        Email
+                    </div>
+
+                    <div class="value">
+                        {{ complaint.user_email }}
+                    </div>
+
+                </div>
+
+                <div class="info-row">
+
+                    <div class="label">
+                        Role
+                    </div>
+
+                    <div class="value">
+                        {{ complaint.user_role }}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- AI ANALYSIS -->
+
+            <div class="card">
+
+                <h2>
+                    AI Analysis
+                </h2>
+
+                <div class="ai-grid">
+
+                    <div class="ai-box">
+
+                        <strong>
+                            Department
+                        </strong>
+
+                        {{ complaint.department }}
+
+                    </div>
+
+
+                    <div class="ai-box">
+
+                        <strong>
+                            Priority
+                        </strong>
+
+                        <span class="priority">
+                            {{ complaint.priority_level }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="ai-box">
+
+                        <strong>
+                            Priority Score
+                        </strong>
+
+                        {{ complaint.priority_score }}/100
+
+                    </div>
+
+
+                    <div class="ai-box">
+
+                        <strong>
+                            Sentiment
+                        </strong>
+
+                        {{ complaint.sentiment }}
+
+                    </div>
+
+
+                    <div class="ai-box">
+
+                        <strong>
+                            Escalation Risk
+                        </strong>
+
+                        {{ complaint.escalation_risk }}
+
+                    </div>
+
+
+                    <div class="ai-box">
+
+                        <strong>
+                            Duplicate
+                        </strong>
+
+                        {% if complaint.duplicate_status %}
+
+                            Yes
+
+                        {% else %}
+
+                            No
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- AI EXPLANATION -->
+
+            <div class="card">
+
+                <h2>
+                    Why did AI give this priority?
+                </h2>
+
+                <div class="explanation">
+
+                    {{ complaint.ai_explanation }}
+
+                </div>
+
+            </div>
+
+
+            <!-- AI RECOMMENDATION -->
+
+            <div class="card">
+
+                <h2>
+                    AI Recommendation
+                </h2>
+
+                <div class="recommendation">
+
+                    {{ complaint.ai_recommendation }}
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- =====================================
+             RIGHT SIDE
+        ===================================== -->
+
+        <div>
+
+
+            <!-- STATUS UPDATE -->
+
+            <div class="card">
+
+                <h2>
+                    Update Status
+                </h2>
+
+                <form
+                    method="POST"
+                    action="{{ url_for('admin_complaint_details', complaint_id=complaint.id) }}"
+                >
+
+                    <label>
+                        Status
+                    </label>
+
+                    <select name="status" required>
+
+                        <option
+                            value="Pending"
+                            {% if complaint.status == "Pending" %}
+                                selected
+                            {% endif %}
+                        >
+                            Pending
+                        </option>
+
+                        <option
+                            value="In Progress"
+                            {% if complaint.status == "In Progress" %}
+                                selected
+                            {% endif %}
+                        >
+                            In Progress
+                        </option>
+
+                        <option
+                            value="Resolved"
+                            {% if complaint.status == "Resolved" %}
+                                selected
+                            {% endif %}
+                        >
+                            Resolved
+                        </option>
+
+                        <option
+                            value="Rejected"
+                            {% if complaint.status == "Rejected" %}
+                                selected
+                            {% endif %}
+                        >
+                            Rejected
+                        </option>
+
+                    </select>
+
+
+                    <label style="display:block; margin-top:15px;">
+                        Remarks
+                    </label>
+
+                    <textarea
+                        name="remarks"
+                        placeholder="Enter remarks about this status update..."
+                    ></textarea>
+
+
+                    <button
+                        type="submit"
+                        class="btn"
+                    >
+                        Update Status
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- CURRENT STATUS -->
+
+            <div class="card">
+
+                <h2>
+                    Current Status
+                </h2>
+
+                <div class="priority">
+                    {{ complaint.status }}
+                </div>
+
+            </div>
+
+
+            <!-- HISTORY -->
+
+            <div class="card">
+
+                <h2>
+                    Complaint History
+                </h2>
+
+                {% if history %}
+
+                    {% for item in history %}
+
+                        <div class="history-item">
+
+                            <strong>
+                                {{ item.old_status }}
+                                →
+                                {{ item.new_status }}
+                            </strong>
+
+                            {% if item.remarks %}
+
+                                <div>
+                                    {{ item.remarks }}
+                                </div>
+
+                            {% endif %}
+
+                            <small>
+                                Changed by:
+                                {{ item.changed_by_name or "Admin" }}
+                                <br>
+
+                                {{ item.changed_at }}
+                            </small>
+
+                        </div>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <p>
+                        No status history available.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</body>
+
+</html>
+```

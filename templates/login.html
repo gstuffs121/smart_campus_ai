@@ -1,0 +1,153 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Login | Smart Campus</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<div class="auth-page">
+
+    <!-- LEFT SIDE -->
+    <section class="auth-visual">
+
+        <div class="brand">
+            <div class="brand-mark">SC</div>
+            <span>SMART CAMPUS</span>
+        </div>
+
+        <div class="visual-content">
+
+            <div class="visual-tag">
+                SMART CAMPUS COMPLAINT PRIORITY SYSTEM
+            </div>
+
+            <h1>
+                Your Campus.<br>
+                Your <span>Voice.</span>
+            </h1>
+
+            <p>
+                Report campus problems, track complaints and help
+                your college respond to important issues faster.
+            </p>
+
+        </div>
+
+        <div class="visual-strip">
+
+            <div class="strip-box">
+                <small>01</small>
+                REPORT
+            </div>
+
+            <div class="strip-box">
+                <small>02</small>
+                TRACK
+            </div>
+
+            <div class="strip-box">
+                <small>03</small>
+                RESOLVE
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- RIGHT SIDE -->
+    <section class="auth-form-side">
+
+        <div class="auth-card">
+
+            <div class="form-top">
+
+                <div class="mini-title">
+                    LOGIN PORTAL
+                </div>
+
+                <h2>Welcome back.</h2>
+
+                <p>
+                    Sign in to submit and track your campus complaints.
+                </p>
+
+            </div>
+
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="flash">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+
+            <form method="POST">
+
+                <div class="form-group">
+                    <label for="email">EMAIL ADDRESS</label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="Enter your email"
+                        required
+                    >
+                </div>
+
+
+                <div class="form-group">
+                    <label for="password">PASSWORD</label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        required
+                    >
+                </div>
+
+
+                <button type="submit" class="auth-button">
+                    SIGN IN →
+                </button>
+
+            </form>
+
+
+            <div class="auth-switch">
+                Don't have an account?
+                <a href="{{ url_for('register') }}">
+                    Create account
+                </a>
+            </div>
+
+
+            <div class="security-note">
+                Your account is protected by secure authentication.
+                Only registered campus users can access the system.
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+</body>
+</html>
+```
