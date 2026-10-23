@@ -87,10 +87,15 @@ def register():
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip()
         password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
         role = request.form.get("role", "").strip()
 
-        if not name or not email or not password or not role:
+        if not name or not email or not password or not confirm_password or not role:
             flash("Please fill all fields.")
+            return redirect(url_for("register"))
+            
+        if password != confirm_password:
+            flash("Passwords do not match.")
             return redirect(url_for("register"))
 
         if not is_valid_email(email):
