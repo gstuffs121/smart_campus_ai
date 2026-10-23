@@ -1,10 +1,16 @@
 
 from flask import (
-    Flask, render_template, request,
-    redirect, url_for, session, flash
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    flash,
 )
 from werkzeug.security import (
-    generate_password_hash, check_password_hash
+    generate_password_hash,
+    check_password_hash,
 )
 from flask_mysqldb import MySQL
 
@@ -13,7 +19,7 @@ from config import (
     MYSQL_USER,
     MYSQL_PASSWORD,
     MYSQL_DB,
-    SECRET_KEY
+    SECRET_KEY,
 )
 
 from ai.classifier import classify_complaint
@@ -45,13 +51,13 @@ mysql = MySQL(app)
 
 @app.route("/")
 def home():
-    if "user_id" in session:
-        if session.get("role") == "admin":
-            return redirect(url_for("admin_dashboard"))
+    if "user_id" not in session:
+        return redirect(url_for("login"))
 
-        return redirect(url_for("student_dashboard"))
+    if session.get("role") == "admin":
+        return redirect(url_for("admin_dashboard"))
 
-    return redirect(url_for("login"))
+    return redirect(url_for("student_dashboard"))
 
 
 # ---------------------------------------------------------
@@ -78,31 +84,38 @@ def register():
 
         cursor = mysql.connection.cursor()
 
-        cursor.execute(
-            "SELECT id FROM users WHERE email = %s",
-            (email,)
-        )
-        existing_user = cursor.fetchone()
+        try:
+            cursor.execute(
+                "SELECT id FROM users WHERE email = %s",
+                (email,),
+            )
+            existing_user = cursor.fetchone()
 
-        if existing_user:
+            if existing_user:
+                flash("Email already registered.")
+                return redirect(url_for("register"))
+
+            hashed_password = generate_password_hash(password)
+
+            cursor.execute(
+                """
+                INSERT INTO users (name, email, password, role)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (name, email, hashed_password, role),
+            )
+
+            mysql.connection.commit()
+            flash("Registration successful. Please login.")
+
+        except Exception:
+            mysql.connection.rollback()
+            app.logger.exception("Registration failed.")
+            flash("Registration failed. Please try again.")
+
+        finally:
             cursor.close()
-            flash("Email already registered.")
-            return redirect(url_for("register"))
 
-        hashed_password = generate_password_hash(password)
-
-        cursor.execute(
-            """
-            INSERT INTO users (name, email, password, role)
-            VALUES (%s, %s, %s, %s)
-            """,
-            (name, email, hashed_password, role)
-        )
-
-        mysql.connection.commit()
-        cursor.close()
-
-        flash("Registration successful. Please login.")
         return redirect(url_for("login"))
 
     return render_template("register.html")
@@ -119,14 +132,19 @@ def login():
         password = request.form.get("password", "")
 
         cursor = mysql.connection.cursor()
-        cursor.execute(
-            "SELECT * FROM users WHERE email = %s",
-            (email,)
-        )
-        user = cursor.fetchone()
-        cursor.close()
+
+        try:
+            cursor.execute(
+                "SELECT * FROM users WHERE email = %s",
+                (email,),
+            )
+            user = cursor.fetchone()
+
+        finally:
+            cursor.close()
 
         if user and check_password_hash(user["password"], password):
+            session.clear()
             session["user_id"] = user["id"]
             session["name"] = user["name"]
             session["role"] = user["role"]
@@ -154,40 +172,44 @@ def student_dashboard():
         return redirect(url_for("admin_dashboard"))
 
     cursor = mysql.connection.cursor()
-    cursor.execute(
-        """
-        SELECT *
-        FROM complaints
-        WHERE user_id = %s
-        ORDER BY created_at DESC
-        """,
-        (session["user_id"],)
-    )
-    complaints = cursor.fetchall()
-    cursor.close()
+
+    try:
+        cursor.execute(
+            """
+            SELECT *
+            FROM complaints
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+            """,
+            (session["user_id"],),
+        )
+        complaints = cursor.fetchall()
+
+    finally:
+        cursor.close()
 
     role = session.get("role")
 
     if role == "faculty":
         return render_template(
             "faculty_dashboard.html",
-            complaints=complaints
+            complaints=complaints,
         )
 
     if role == "non_faculty":
         return render_template(
             "staff_dashboard.html",
-            complaints=complaints
+            complaints=complaints,
         )
 
     return render_template(
         "student_dashboard.html",
-        complaints=complaints
+        complaints=complaints,
     )
 
 
 # ---------------------------------------------------------
-# NEW COMPLAINT
+# NEW COMPLAINT + EMERGENCY DETECTION
 # ---------------------------------------------------------
 
 @app.route("/student/complaint/new", methods=["GET", "POST"])
@@ -198,37 +220,34 @@ def new_complaint():
     if session.get("role") == "admin":
         return redirect(url_for("admin_dashboard"))
 
-    # Always define a result, including on the initial GET request.
     emergency_result = detect_emergency("", "")
 
     if request.method == "GET":
         return render_template(
             "submit_complaint.html",
-            emergency_result=emergency_result
+            emergency_result=emergency_result,
         )
 
-    # Read submitted form fields.
     title = request.form.get("title", "").strip()
     description = request.form.get("description", "").strip()
     location = request.form.get("location", "").strip()
 
-    # Check for potential emergency phrases.
+    # Check the submitted text for configured emergency phrases.
     emergency_result = detect_emergency(title, description)
 
     if emergency_result["is_emergency"]:
-        print(
-            "EMERGENCY ALERT:",
-            emergency_result["detected_types"]
+        app.logger.warning(
+            "Potential emergency reported by user ID %s: %s",
+            session["user_id"],
+            ", ".join(emergency_result["detected_types"]),
         )
 
-    # Validate the form.
     if not title or not description or not location:
         flash("Please fill all complaint fields.")
 
-        # Render directly so the emergency result is not lost.
         return render_template(
             "submit_complaint.html",
-            emergency_result=emergency_result
+            emergency_result=emergency_result,
         )
 
     full_text = title + " " + description
@@ -243,23 +262,22 @@ def new_complaint():
     priority_score, priority_level = calculate_priority(
         title,
         description,
-        sentiment
+        sentiment,
     )
 
     # AI 4 - Escalation risk
     escalation_risk = calculate_escalation(
         priority_score,
-        sentiment
+        sentiment,
     )
 
     # AI 5 - Recommendation
     recommendation = generate_recommendation(
         department,
         priority_level,
-        escalation_risk
+        escalation_risk,
     )
 
-    # AI explanation
     explanation = (
         f"The complaint was analyzed as {priority_level} "
         f"priority with a score of {priority_score}/100. "
@@ -268,10 +286,10 @@ def new_complaint():
         f"with {escalation_risk} escalation risk."
     )
 
-    # AI 6 - Duplicate detection
     cursor = mysql.connection.cursor()
 
     try:
+        # AI 6 - Duplicate detection
         cursor.execute(
             """
             SELECT id, title, description
@@ -282,14 +300,15 @@ def new_complaint():
         existing_complaints = cursor.fetchall()
 
         old_texts = [
-            (complaint["title"] or "") + " " +
-            (complaint["description"] or "")
+            (complaint.get("title") or "")
+            + " "
+            + (complaint.get("description") or "")
             for complaint in existing_complaints
         ]
 
         duplicate_index, similarity = find_duplicate(
             full_text,
-            old_texts
+            old_texts,
         )
 
         duplicate_status = duplicate_index is not None
@@ -298,7 +317,6 @@ def new_complaint():
         if duplicate_status:
             duplicate_of = existing_complaints[duplicate_index]["id"]
 
-        # Save the complaint using the existing database columns.
         cursor.execute(
             """
             INSERT INTO complaints
@@ -340,25 +358,26 @@ def new_complaint():
                 duplicate_of,
                 escalation_risk,
                 explanation,
-                recommendation
-            )
+                recommendation,
+            ),
         )
 
         mysql.connection.commit()
 
     except Exception:
         mysql.connection.rollback()
-        app.logger.exception("Could not save complaint")
+        app.logger.exception("Could not save complaint.")
+
         flash("The complaint could not be saved. Please try again.")
+
         return render_template(
             "submit_complaint.html",
-            emergency_result=emergency_result
+            emergency_result=emergency_result,
         )
 
     finally:
         cursor.close()
 
-    # Show the emergency warning as a flash message after saving.
     if emergency_result["is_emergency"]:
         flash(
             "SAFETY WARNING: A potential hazard was detected. "
@@ -384,16 +403,20 @@ def complaint_details(complaint_id):
         return redirect(url_for("login"))
 
     cursor = mysql.connection.cursor()
-    cursor.execute(
-        """
-        SELECT *
-        FROM complaints
-        WHERE id = %s AND user_id = %s
-        """,
-        (complaint_id, session["user_id"])
-    )
-    complaint = cursor.fetchone()
-    cursor.close()
+
+    try:
+        cursor.execute(
+            """
+            SELECT *
+            FROM complaints
+            WHERE id = %s AND user_id = %s
+            """,
+            (complaint_id, session["user_id"]),
+        )
+        complaint = cursor.fetchone()
+
+    finally:
+        cursor.close()
 
     if not complaint:
         flash("Complaint not found.")
@@ -401,7 +424,7 @@ def complaint_details(complaint_id):
 
     return render_template(
         "complaint_details.html",
-        complaint=complaint
+        complaint=complaint,
     )
 
 
@@ -411,7 +434,7 @@ def complaint_details(complaint_id):
 
 @app.route(
     "/admin/complaint/<int:complaint_id>",
-    methods=["GET", "POST"]
+    methods=["GET", "POST"],
 )
 def admin_complaint_details(complaint_id):
     if "user_id" not in session:
@@ -427,7 +450,10 @@ def admin_complaint_details(complaint_id):
         remarks = request.form.get("remarks", "").strip()
 
         allowed_statuses = [
-            "Pending", "In Progress", "Resolved", "Rejected"
+            "Pending",
+            "In Progress",
+            "Resolved",
+            "Rejected",
         ]
 
         if new_status not in allowed_statuses:
@@ -436,39 +462,41 @@ def admin_complaint_details(complaint_id):
             return redirect(
                 url_for(
                     "admin_complaint_details",
-                    complaint_id=complaint_id
+                    complaint_id=complaint_id,
                 )
             )
 
-        cursor.execute(
-            "SELECT status FROM complaints WHERE id = %s",
-            (complaint_id,)
-        )
-        current_complaint = cursor.fetchone()
-
-        if not current_complaint:
-            cursor.close()
-            flash("Complaint not found.")
-            return redirect(url_for("admin_dashboard"))
-
-        old_status = current_complaint["status"]
-
         try:
+            cursor.execute(
+                "SELECT status FROM complaints WHERE id = %s",
+                (complaint_id,),
+            )
+            current_complaint = cursor.fetchone()
+
+            if not current_complaint:
+                flash("Complaint not found.")
+                return redirect(url_for("admin_dashboard"))
+
+            old_status = current_complaint["status"]
+
             cursor.execute(
                 """
                 UPDATE complaints
                 SET status = %s
                 WHERE id = %s
                 """,
-                (new_status, complaint_id)
+                (new_status, complaint_id),
             )
 
             cursor.execute(
                 """
                 INSERT INTO complaint_history
                 (
-                    complaint_id, old_status, new_status,
-                    changed_by, remarks
+                    complaint_id,
+                    old_status,
+                    new_status,
+                    changed_by,
+                    remarks
                 )
                 VALUES (%s, %s, %s, %s, %s)
                 """,
@@ -477,73 +505,69 @@ def admin_complaint_details(complaint_id):
                     old_status,
                     new_status,
                     session["user_id"],
-                    remarks
-                )
+                    remarks,
+                ),
             )
 
             mysql.connection.commit()
+            flash("Complaint status updated successfully.")
 
         except Exception:
             mysql.connection.rollback()
-            app.logger.exception("Could not update complaint status")
+            app.logger.exception("Could not update complaint status.")
             flash("The status could not be updated.")
-            cursor.close()
-            return redirect(
-                url_for(
-                    "admin_complaint_details",
-                    complaint_id=complaint_id
-                )
-            )
 
-        cursor.close()
-        flash("Complaint status updated successfully.")
+        finally:
+            cursor.close()
 
         return redirect(
             url_for(
                 "admin_complaint_details",
-                complaint_id=complaint_id
+                complaint_id=complaint_id,
             )
         )
 
-    cursor.execute(
-        """
-        SELECT
-            c.*,
-            u.name AS user_name,
-            u.email AS user_email,
-            u.role AS user_role
-        FROM complaints c
-        JOIN users u ON c.user_id = u.id
-        WHERE c.id = %s
-        """,
-        (complaint_id,)
-    )
-    complaint = cursor.fetchone()
+    try:
+        cursor.execute(
+            """
+            SELECT
+                c.*,
+                u.name AS user_name,
+                u.email AS user_email,
+                u.role AS user_role
+            FROM complaints c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.id = %s
+            """,
+            (complaint_id,),
+        )
+        complaint = cursor.fetchone()
 
-    if not complaint:
+        if not complaint:
+            flash("Complaint not found.")
+            return redirect(url_for("admin_dashboard"))
+
+        cursor.execute(
+            """
+            SELECT
+                ch.*,
+                u.name AS changed_by_name
+            FROM complaint_history ch
+            LEFT JOIN users u ON ch.changed_by = u.id
+            WHERE ch.complaint_id = %s
+            ORDER BY ch.changed_at DESC
+            """,
+            (complaint_id,),
+        )
+        history = cursor.fetchall()
+
+    finally:
         cursor.close()
-        flash("Complaint not found.")
-        return redirect(url_for("admin_dashboard"))
-
-    cursor.execute(
-        """
-        SELECT
-            ch.*,
-            u.name AS changed_by_name
-        FROM complaint_history ch
-        LEFT JOIN users u ON ch.changed_by = u.id
-        WHERE ch.complaint_id = %s
-        ORDER BY ch.changed_at DESC
-        """,
-        (complaint_id,)
-    )
-    history = cursor.fetchall()
-    cursor.close()
 
     return render_template(
         "admin_complaint_details.html",
         complaint=complaint,
-        history=history
+        history=history,
     )
 
 
@@ -561,36 +585,38 @@ def admin_dashboard():
 
     cursor = mysql.connection.cursor()
 
-    cursor.execute(
-        """
-        SELECT *
-        FROM complaints
-        ORDER BY priority_score DESC, created_at DESC
-        """
-    )
-    complaints = cursor.fetchall()
+    try:
+        cursor.execute(
+            """
+            SELECT *
+            FROM complaints
+            ORDER BY priority_score DESC, created_at DESC
+            """
+        )
+        complaints = cursor.fetchall()
 
-    cursor.execute(
-        "SELECT COUNT(*) AS total FROM complaints"
-    )
-    total = cursor.fetchone()["total"]
+        cursor.execute(
+            "SELECT COUNT(*) AS total FROM complaints"
+        )
+        total = cursor.fetchone()["total"]
 
-    cursor.execute(
-        "SELECT COUNT(*) AS total FROM complaints WHERE status = 'Pending'"
-    )
-    pending = cursor.fetchone()["total"]
+        cursor.execute(
+            "SELECT COUNT(*) AS total FROM complaints WHERE status = 'Pending'"
+        )
+        pending = cursor.fetchone()["total"]
 
-    cursor.execute(
-        "SELECT COUNT(*) AS total FROM complaints WHERE status = 'In Progress'"
-    )
-    in_progress = cursor.fetchone()["total"]
+        cursor.execute(
+            "SELECT COUNT(*) AS total FROM complaints WHERE status = 'In Progress'"
+        )
+        in_progress = cursor.fetchone()["total"]
 
-    cursor.execute(
-        "SELECT COUNT(*) AS total FROM complaints WHERE status = 'Resolved'"
-    )
-    resolved = cursor.fetchone()["total"]
+        cursor.execute(
+            "SELECT COUNT(*) AS total FROM complaints WHERE status = 'Resolved'"
+        )
+        resolved = cursor.fetchone()["total"]
 
-    cursor.close()
+    finally:
+        cursor.close()
 
     return render_template(
         "admin_dashboard.html",
@@ -598,7 +624,7 @@ def admin_dashboard():
         total=total,
         pending=pending,
         in_progress=in_progress,
-        resolved=resolved
+        resolved=resolved,
     )
 
 
@@ -623,6 +649,7 @@ def page_not_found(error):
 
 @app.errorhandler(500)
 def internal_error(error):
+    app.logger.exception("An internal server error occurred: %s", error)
     return "Internal server error", 500
 
 
