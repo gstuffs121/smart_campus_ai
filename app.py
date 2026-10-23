@@ -30,6 +30,23 @@ from ai.escalation import calculate_escalation
 from ai.recommendation import generate_recommendation
 from ai.emergency_detector import detect_emergency
 
+# ===== EMAIL AND PASSWORD VALIDATION =====
+import re
+
+def is_valid_email(email):
+    pattern = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+    return re.fullmatch(pattern, email) is not None
+
+
+def is_strong_password(password):
+    return (
+        len(password) >= 8
+        and bool(re.search(r"[A-Z]", password))
+        and bool(re.search(r"[a-z]", password))
+        and bool(re.search(r"\d", password))
+        and bool(re.search(r"[^A-Za-z0-9]", password))
+    )
+
 
 app = Flask(__name__)
 
