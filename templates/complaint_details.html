@@ -1,0 +1,234 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Complaint Details | Smart Campus</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="dashboard-body">
+
+<nav class="dashboard-nav">
+
+    <div class="dashboard-brand">
+        <div class="dashboard-logo">SC</div>
+        <span>SMART CAMPUS</span>
+    </div>
+
+    <div class="dashboard-nav-right">
+
+        <span class="dashboard-user">
+            {{ session.get('name', 'Student') }}
+        </span>
+
+        <a href="{{ url_for('logout') }}"
+           class="logout-btn">
+            Logout
+        </a>
+
+    </div>
+
+</nav>
+
+<main class="details-container">
+
+    <a href="{{ url_for('student_dashboard') }}"
+       class="back-dashboard">
+        ← Back to Dashboard
+    </a>
+
+    <section class="details-header">
+
+        <div>
+
+            <div class="details-label">
+                COMPLAINT #{{ complaint.id }}
+            </div>
+
+            <h1>{{ complaint.title }}</h1>
+
+            <p>
+                Submitted on {{ complaint.created_at }}
+            </p>
+
+        </div>
+
+        <div class="details-status">
+            {{ complaint.status }}
+        </div>
+
+    </section>
+
+    <section class="details-grid">
+
+        <div class="details-left">
+
+            <div class="detail-card">
+
+                <div class="detail-card-title">
+                    COMPLAINT INFORMATION
+                </div>
+
+                <h2>{{ complaint.title }}</h2>
+
+                <p class="description-text">
+                    {{ complaint.description }}
+                </p>
+
+                <div class="location-box">
+
+                    <strong>LOCATION</strong>
+
+                    <span>
+                        {{ complaint.location or 'Not provided' }}
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="detail-card ai-card">
+
+                <div class="detail-card-title">
+                    AI ANALYSIS
+                </div>
+
+                <div class="ai-explanation">
+
+                    <div class="ai-icon">
+                        AI
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            AI Priority Analysis
+                        </h3>
+
+                        <p>
+                            {{ complaint.ai_explanation or
+                            'The AI system analyzed your complaint.' }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="detail-card">
+
+                <div class="detail-card-title">
+                    AI RECOMMENDATION
+                </div>
+
+                <div class="recommendation-box">
+
+                    <strong>
+                        Recommended Action
+                    </strong>
+
+                    <p>
+                        {{ complaint.ai_recommendation or
+                        'The responsible department should investigate this complaint.' }}
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <aside class="details-right">
+
+            <div class="analysis-card priority-analysis">
+
+                <div class="analysis-heading">
+                    AI PRIORITY
+                </div>
+
+                <div class="priority-score">
+
+                    <strong>
+                        {{ complaint.priority_score }}
+                    </strong>
+
+                    <span>/100</span>
+
+                </div>
+
+                <div class="priority-level">
+                    {{ complaint.priority_level }}
+                </div>
+
+            </div>
+
+            <div class="analysis-card">
+
+                <div class="analysis-heading">
+                    AI RESULTS
+                </div>
+
+                <div class="analysis-row">
+
+                    <span>Department</span>
+
+                    <strong>
+                        {{ complaint.department or 'Not Assigned' }}
+                    </strong>
+
+                </div>
+
+                <div class="analysis-row">
+
+                    <span>Sentiment</span>
+
+                    <strong>
+                        {{ complaint.sentiment or 'Neutral' }}
+                    </strong>
+
+                </div>
+
+                <div class="analysis-row">
+
+                    <span>Escalation Risk</span>
+
+                    <strong>
+                        {{ complaint.escalation_risk or 'Low' }}
+                    </strong>
+
+                </div>
+
+                <div class="analysis-row">
+
+                    <span>Duplicate</span>
+
+                    <strong>
+
+                        {% if complaint.duplicate_status %}
+                            Possible Duplicate
+                        {% else %}
+                            No Duplicate
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+    </section>
+
+</main>
+
+</body>
+</html>
+```

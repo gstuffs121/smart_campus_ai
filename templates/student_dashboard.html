@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+```
+<title>
+    {% if session.get('role') == 'faculty' %}
+        Faculty Dashboard
+    {% elif session.get('role') == 'non_faculty' %}
+        Staff Dashboard
+    {% else %}
+        Student Dashboard
+    {% endif %}
+    | Smart Campus
+</title>
+
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}">
+
+<style>
+
+    /* ROLE INFO */
+
+    .role-badge {
+        display: inline-block;
+        background: #ffd21f;
+        color: #111111;
+        padding: 7px 13px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        margin-top: 8px;
+    }
+
+    .role-info {
+        margin-top: 10px;
+        color: #777777;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    /* QUICK ACTIONS */
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin-bottom: 35px;
+    }
+
+    .quick-card {
+        background: #ffffff;
+        border: 1px solid #e8e8e8;
+        padding: 22px;
+        text-decoration: none;
+        color: #111111;
+        transition: 0.2s;
+    }
+
+    .quick-card:hover {
+        border-color: #ffd21f;
+        transform: translateY(-2px);
+    }
+
+    .quick-card-icon {
+        width: 40px;
+        height: 40px;
+        background: #ffd21f;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        margin-bottom: 14px;
+    }
+
+    .quick-card h3 {
+        font-size: 16px;
+        margin-bottom: 6px;
+    }
+
+    .quick-card p {
+        color: #777777;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    /* ROLE NOTICE */
+
+    .role-notice {
+        background: #111111;
+        color: white;
+        padding: 22px 25px;
+        margin-bottom: 35px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .role-notice strong {
+        color: #ffd21f;
+    }
+
+    .role-notice p {
+        margin-top: 5px;
+        color: #cccccc;
+        font-size: 13px;
+    }
+
+    /* RESPONSIVE */
+
+    @media (max-width: 900px) {
+
+        .quick-actions {
+            grid-template-columns: 1fr;
+        }
+
+        .role-notice {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+</style>
+```
+
+</head>
+
+<body class="dashboard-body">
+
+<!-- NAVBAR -->
+
+<nav class="dashboard-nav">
+
+```
+<div class="dashboard-brand">
+
+    <div class="dashboard-logo">
+        SC
+    </div>
+
+    <span>
+        SMART CAMPUS
+    </span>
+
+</div>
+
+
+<div class="dashboard-nav-right">
+
+    <span class="dashboard-user">
+        {{ session.get('name', 'User') }}
+    </span>
+
+    <a href="{{ url_for('logout') }}"
+       class="logout-btn">
+        Logout
+    </a>
+
+</div>
+```
+
+</nav>
+
+<!-- MAIN -->
+
+<main class="dashboard-container">
+
+```
+<!-- WELCOME -->
+
+<section class="dashboard-welcome">
+
+    <div>
+
+        <div class="dashboard-label">
+
+            {% if session.get('role') == 'faculty' %}
+                FACULTY DASHBOARD
+
+            {% elif session.get('role') == 'non_faculty' %}
+                NON-TEACHING STAFF DASHBOARD
+
+            {% else %}
+                STUDENT DASHBOARD
+            {% endif %}
+
+        </div>
+
+
+        <h1>
+            Welcome back,
+            <span>
+                {{ session.get('name', 'User') }}
+            </span>
+        </h1>
+
+
+        {% if session.get('role') == 'faculty' %}
+
+            <div class="role-badge">
+                FACULTY
+            </div>
+
+            <p class="role-info">
+                Report academic, classroom, IT and campus
+                facility issues and track their progress.
+            </p>
+
+
+        {% elif session.get('role') == 'non_faculty' %}
+
+            <div class="role-badge">
+                NON-TEACHING STAFF
+            </div>
+
+            <p class="role-info">
+                Report workplace, maintenance, electrical,
+                housekeeping and IT-related issues.
+            </p>
+
+
+        {% else %}
+
+            <div class="role-badge">
+                STUDENT
+            </div>
+
+            <p class="role-info">
+                Report campus problems, track your complaints
+                and stay updated on their progress.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+
+    <a href="{{ url_for('new_complaint') }}"
+       class="new-complaint-btn">
+
+        + New Complaint
+
+    </a>
+
+</section>
+
+
+
+<!-- ROLE NOTICE -->
+
+<div class="role-notice">
+
+    <div>
+
+        {% if session.get('role') == 'faculty' %}
+
+            <strong>Faculty Complaint Portal</strong>
+
+            <p>
+                Your complaints can cover teaching facilities,
+                classrooms, laboratories, academic services,
+                IT systems and campus infrastructure.
+            </p>
+
+
+        {% elif session.get('role') == 'non_faculty' %}
+
+            <strong>Staff Complaint Portal</strong>
+
+            <p>
+                Report issues affecting offices, facilities,
+                maintenance, housekeeping, electrical systems
+                and workplace infrastructure.
+            </p>
+
+
+        {% else %}
+
+            <strong>Student Complaint Portal</strong>
+
+            <p>
+                Report issues related to classrooms, hostels,
+                library, internet, facilities, security and academics.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+    <div>
+        AI-POWERED
+    </div>
+
+</div>
+
+
+
+<!-- STATISTICS -->
+
+<section class="stats-grid">
+
+    <div class="stat-card">
+
+        <div class="stat-number">
+            {{ complaints|length }}
+        </div>
+
+        <div class="stat-title">
+            TOTAL COMPLAINTS
+        </div>
+
+    </div>
+
+
+    <div class="stat-card pending-stat">
+
+        <div class="stat-number">
+            {{
+                complaints
+                |selectattr('status', 'equalto', 'Pending')
+                |list
+                |length
+            }}
+        </div>
+
+        <div class="stat-title">
+            PENDING
+        </div>
+
+    </div>
+
+
+    <div class="stat-card progress-stat">
+
+        <div class="stat-number">
+            {{
+                complaints
+                |selectattr('status', 'equalto', 'In Progress')
+                |list
+                |length
+            }}
+        </div>
+
+        <div class="stat-title">
+            IN PROGRESS
+        </div>
+
+    </div>
+
+
+    <div class="stat-card resolved-stat">
+
+        <div class="stat-number">
+            {{
+                complaints
+                |selectattr('status', 'equalto', 'Resolved')
+                |list
+                |length
+            }}
+        </div>
+
+        <div class="stat-title">
+            RESOLVED
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- QUICK ACTIONS -->
+
+<section class="quick-actions">
+
+
+    {% if session.get('role') == 'faculty' %}
+
+        <a href="{{ url_for('new_complaint') }}"
+           class="quick-card">
+
+            <div class="quick-card-icon">
+                AC
+            </div>
+
+            <h3>
+                Academic Issue
+            </h3>
+
+            <p>
+                Report classroom, laboratory or
+                academic facility problems.
+            </p>
+
+        </a>
+
+
+        <a href="{{ url_for('new_complaint') }}"
+           class="quick-card">
+
+            <div class="quick-card-icon">
+                IT
+            </div>
+
+            <h3>
+                IT / Network
+            </h3>
+
+            <p>
+                Report Wi-Fi, computer or
+                network-related problems.
+            </p>
+
+        </a>
+
+
+        <a href="{{ url_for('new_complaint') }}"
+           class="quick-card">
+
+            <div class="quick-card-icon">
+                FM
+            </div>
+
+            <h3>
+                Facility Issue
+            </h3>
+
+            <p>
+                Report maintenance, electrical
+                or infrastructure problems.
+            </p>
+
+        </a>
+
+
+    {% elif session.get('role') == 'non_faculty' %}
+
+
+        <a href="{{ url_for('new_complaint') }}"
+           class="quick-card">
+
+            <div class="quick-card-icon">
+                MT
+            </div>
+
+            <h3>
+                Maintenance
+            </h3>
+
+            <p>
+                Report building and workplace
+                maintenance problems.
+            </p>
+
+        </a>
+
+
+        <a href="{{ url_for('new_complaint') }}"
+           class="quick-card">
+
+            <div class="quick-card-icon">
+                EL
+            </div>
+
+            <h3>
+                Electrical
+            </h3>
+
+            <p>
+                Report electrical equipment,
+                lighting or power problems.
+            </p>
+
+        </a>
+
+
+        <a href="{{ url_for('new_complaint') }}"
+           class="quick-card">
+
+            <div class="quick-card-icon">
+                HS
+            </div>
+
+            <h3>
+                Housekeeping
+            </h3>
+
+            <p>
+                Report cleaning, sanitation
+                and workplace hygiene issues.
+            </p>
+
+        </a>
+
+
+    {% else %}
+
+
+        <a href="{{ url_for('new_complaint') }}"
+           class="quick-card">
+
+            <div class="quick-card-icon">
+                CL
+            </div>
+
+            <h3>
+                Classroom / Lab
+            </h3>
+
+            <p>
+                Report classroom, laboratory
+                or equipment problems.
+            </p>
+
+        </a>
+
+
+        <a href="{{ url_for('new_complaint') }}"
+           class="quick-card">
+
+            <div class="quick-card-icon">
+                WI
+            </div>
+
+            <h3>
+                Wi-Fi / Internet
+            </h3>
+
+            <p>
+                Report internet, Wi-Fi or
+                computer-related problems.
+            </p>
+
+        </a>
+
+
+        <a href="{{ url_for('new_complaint') }}"
+           class="quick-card">
+
+            <div class="quick-card-icon">
+                SE
+            </div>
+
+            <h3>
+                Security
+            </h3>
+
+            <p>
+                Report safety and security
+                concerns on campus.
+            </p>
+
+        </a>
+
+    {% endif %}
+
+</section>
+
+
+
+<!-- COMPLAINT HISTORY -->
+
+<section class="complaints-section">
+
+    <div class="section-heading">
+
+        <div>
+
+            <div class="dashboard-label">
+                COMPLAINT HISTORY
+            </div>
+
+            <h2>
+                My Complaints
+            </h2>
+
+        </div>
+
+
+        <a href="{{ url_for('new_complaint') }}"
+           class="small-action-btn">
+
+            Submit Complaint
+
+        </a>
+
+    </div>
+
+
+
+    {% if complaints %}
+
+
+        <div class="complaint-list">
+
+            {% for complaint in complaints %}
+
+                <article class="complaint-row">
+
+
+                    <div class="complaint-main">
+
+                        <div class="complaint-id">
+                            #{{ complaint.id }}
+                        </div>
+
+                        <h3>
+                            {{ complaint.title }}
+                        </h3>
+
+                        <p>
+                            {{ complaint.description[:120] }}
+
+                            {% if complaint.description|length > 120 %}
+                                ...
+                            {% endif %}
+                        </p>
+
+
+                        <div class="complaint-meta">
+
+                            <span>
+                                {{ complaint.category or 'General' }}
+                            </span>
+
+                            <span>
+                                {{ complaint.department or 'Not Assigned' }}
+                            </span>
+
+                            <span>
+                                {{ complaint.created_at }}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="complaint-side">
+
+
+                        <div class="priority-badge
+                            {% if complaint.priority_level == 'Critical' %}
+                                priority-critical
+                            {% elif complaint.priority_level == 'High' %}
+                                priority-high
+                            {% elif complaint.priority_level == 'Medium' %}
+                                priority-medium
+                            {% else %}
+                                priority-low
+                            {% endif %}
+                        ">
+
+                            {{ complaint.priority_level or 'Low' }}
+
+                        </div>
+
+
+                        <div class="status-badge
+                            {% if complaint.status == 'Resolved' %}
+                                status-resolved
+                            {% elif complaint.status == 'In Progress' %}
+                                status-progress
+                            {% elif complaint.status == 'Rejected' %}
+                                status-rejected
+                            {% else %}
+                                status-pending
+                            {% endif %}
+                        ">
+
+                            {{ complaint.status }}
+
+                        </div>
+
+
+                        <a href="{{ url_for(
+                            'complaint_details',
+                            complaint_id=complaint.id
+                        ) }}"
+                           class="view-btn">
+
+                            View →
+
+                        </a>
+
+                    </div>
+
+                </article>
+
+            {% endfor %}
+
+        </div>
+
+
+    {% else %}
+
+
+        <div class="empty-complaints">
+
+            <div class="empty-icon">
+                +
+            </div>
+
+            <h3>
+                No complaints yet
+            </h3>
+
+            <p>
+                You haven't submitted any campus complaints.
+            </p>
+
+            <a href="{{ url_for('new_complaint') }}"
+               class="new-complaint-btn">
+
+                Submit Your First Complaint
+
+            </a>
+
+        </div>
+
+
+    {% endif %}
+
+</section>
+```
+
+</main>
+
+</body>
+</html>

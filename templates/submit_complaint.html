@@ -1,0 +1,374 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Submit Complaint | Smart Campus</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body class="complaint-page">
+
+
+<!-- =====================================================
+     NAVBAR
+===================================================== -->
+
+<nav class="dashboard-nav">
+
+    <div class="dashboard-brand">
+
+        <div class="dashboard-logo">
+            SC
+        </div>
+
+        <span>
+            SMART CAMPUS
+        </span>
+
+    </div>
+
+
+    <div class="dashboard-nav-right">
+
+        <span class="dashboard-user">
+            {{ session.get('name', 'Student') }}
+        </span>
+
+        <a href="{{ url_for('logout') }}"
+           class="logout-btn">
+
+            Logout
+
+        </a>
+
+    </div>
+
+</nav>
+
+
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main class="complaint-container">
+
+
+    <!-- BACK -->
+
+    <a href="{{ url_for('student_dashboard') }}"
+       class="back-dashboard">
+
+        ← Back to Dashboard
+
+    </a>
+
+
+
+    <!-- HEADER -->
+
+    <section class="complaint-header">
+
+        <div>
+
+            <div class="dashboard-label">
+                CAMPUS COMPLAINT SYSTEM
+            </div>
+
+            <h1>
+                Report a Problem
+            </h1>
+
+            <p>
+                Tell us what is happening on campus.
+                Our system will analyze your complaint
+                and help route it to the appropriate department.
+            </p>
+
+        </div>
+
+
+        <div class="complaint-number">
+
+            <span>
+                STEP
+            </span>
+
+            <strong>
+                01
+            </strong>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- FORM AREA -->
+
+    <section class="complaint-form-layout">
+
+
+        <!-- LEFT INFORMATION -->
+
+        <aside class="complaint-info">
+
+
+            <div class="info-block">
+
+                <div class="info-number">
+                    01
+                </div>
+
+                <div>
+
+                    <h3>
+                        Describe
+                    </h3>
+
+                    <p>
+                        Explain the problem clearly
+                        so the system can understand it.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="info-block">
+
+                <div class="info-number">
+                    02
+                </div>
+
+                <div>
+
+                    <h3>
+                        Analyze
+                    </h3>
+
+                    <p>
+                        AI will identify the complaint
+                        category and priority.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="info-block">
+
+                <div class="info-number">
+                    03
+                </div>
+
+                <div>
+
+                    <h3>
+                        Resolve
+                    </h3>
+
+                    <p>
+                        Your complaint will be routed
+                        to the responsible department.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+        </aside>
+
+
+
+        <!-- FORM -->
+
+        <div class="complaint-form-card">
+
+                        {% if emergency_result and emergency_result.is_emergency %}
+
+                <div class="emergency-notice" role="alert">
+
+                    <div class="emergency-notice-icon">⚠️</div>
+
+                    <div>
+                        <h3>Potential Emergency Detected</h3>
+
+                        <p>
+                            Our system detected a possible safety hazard:
+                            <strong>
+                                {{ emergency_result.detected_types | join(', ') }}
+                            </strong>
+                        </p>
+
+                        <p>
+                            {{ emergency_result.message }}
+                        </p>
+
+                        <small>
+                            This automated alert may be incorrect or may miss hazards.
+                            Please contact the appropriate campus safety team immediately
+                            if anyone is in danger.
+                        </small>
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            
+                {% if messages %}
+
+                    {% for category, message in messages %}
+
+                        <div class="complaint-flash">
+
+                            {{ message }}
+
+                        </div>
+
+                    {% sendfor %}
+
+                {% endif %}
+
+            {% endwith %}
+
+
+
+            <form method="POST">
+
+
+                <!-- TITLE -->
+
+                <div class="complaint-field">
+
+                    <label for="title">
+                        COMPLAINT TITLE
+                    </label>
+
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        placeholder="Example: Wi-Fi is not working in Block A"
+                        maxlength="200"
+                        required
+                    >
+
+                    <small>
+                        Give your complaint a short and clear title.
+                    </small>
+
+                </div>
+
+
+
+                <!-- DESCRIPTION -->
+
+                <div class="complaint-field">
+
+                    <label for="description">
+                        WHAT HAPPENED?
+                    </label>
+
+                    <textarea
+                        id="description"
+                        name="description"
+                        placeholder="Describe the problem in detail..."
+                        maxlength="2000"
+                        required
+                    ></textarea>
+
+                    <small>
+                        Include useful details such as what happened,
+                        when it happened and how it affects you.
+                    </small>
+
+                </div>
+
+
+
+                <!-- LOCATION -->
+
+                <div class="complaint-field">
+
+                    <label for="location">
+                        CAMPUS LOCATION
+                    </label>
+
+                    <input
+                        type="text"
+                        id="location"
+                        name="location"
+                        placeholder="Example: Block A, Room 204"
+                        maxlength="200"
+                    >
+
+                    <small>
+                        Mention the block, room or campus area.
+                    </small>
+
+                </div>
+
+
+
+                <!-- SUBMIT AREA -->
+
+                <div class="complaint-submit-area">
+
+                    <div class="submit-note">
+
+                        <strong>
+                            AI ANALYSIS
+                        </strong>
+
+                        <span>
+                            Category, priority and department
+                            will be analyzed automatically.
+                        </span>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="complaint-submit-btn"
+                    >
+
+                        SUBMIT COMPLAINT
+                        <span>→</span>
+
+                    </button>
+
+                </div>
+
+
+            </form>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+</body>
+</html>
+```
