@@ -93,6 +93,18 @@ def register():
             flash("Please fill all fields.")
             return redirect(url_for("register"))
 
+        if not is_valid_email(email):
+            flash("Please enter a valid email address.")
+            return redirect(url_for("register"))
+            
+        if not is_strong_password(password):
+            flash(
+                "Password must contain at least 8 characters, "
+                "one uppercase letter, one lowercase letter, "
+                "one number, and one special character."
+            )
+            return redirect(url_for("register"))
+
         allowed_roles = ["student", "faculty", "non_faculty"]
 
         if role not in allowed_roles:
